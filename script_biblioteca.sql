@@ -1,37 +1,53 @@
 -- MySQL Workbench Forward Engineering
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=1;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
-SET FOREIGN_KEY_CHECKS = 1;
-
+	
+-- -----------------------------------------------------
+-- Schema bibliotecasaberlivre
+-- -----------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS `bibliotecasaberlivre` DEFAULT CHARACTER SET utf8mb4 ;
 USE `bibliotecasaberlivre` ;
 
--- ==============================================================================
--- (a) Criação de todas as tabelas e restrições de integridade.
--- ==============================================================================
-
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`autor`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`autor` (
   `cpfAutor` CHAR(11) NOT NULL,
   `nome` VARCHAR(80) NOT NULL,
-  `sobre` VARCHAR(150) DEFAULT 'Biografia não informada', 
+  `sobre` VARCHAR(150) NULL DEFAULT NULL,
   PRIMARY KEY (`cpfAutor`))
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`editora`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`editora` (
   `cnpj` CHAR(14) NOT NULL,
   `nomeFantasia` VARCHAR(80) NOT NULL,
   PRIMARY KEY (`cnpj`))
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`usuario`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`usuario` (
   `cpf` CHAR(11) NOT NULL,
   `nome` VARCHAR(80) NOT NULL,
-  `email` VARCHAR(80) NOT NULL UNIQUE, 
+  `email` VARCHAR(80) NOT NULL,
   PRIMARY KEY (`cpf`))
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`emprestimo`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`emprestimo` (
   `protocolo` INT(11) NOT NULL,
   `dataRetirada` DATE NOT NULL,
@@ -41,9 +57,15 @@ CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`emprestimo` (
   PRIMARY KEY (`protocolo`),
   INDEX `fk_emprestimo_usuario` (`Usuario_cpf` ASC),
   CONSTRAINT `fk_emprestimo_usuario`
-    FOREIGN KEY (`Usuario_cpf`) REFERENCES `bibliotecasaberlivre`.`usuario` (`cpf`))
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+    FOREIGN KEY (`Usuario_cpf`)
+    REFERENCES `bibliotecasaberlivre`.`usuario` (`cpf`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`livro`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`livro` (
   `isbn` CHAR(13) NOT NULL,
   `titulo` VARCHAR(100) NOT NULL,
@@ -52,9 +74,15 @@ CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`livro` (
   PRIMARY KEY (`isbn`),
   INDEX `fk_livro_editora` (`Editora_cnpj` ASC),
   CONSTRAINT `fk_livro_editora`
-    FOREIGN KEY (`Editora_cnpj`) REFERENCES `bibliotecasaberlivre`.`editora` (`cnpj`))
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+    FOREIGN KEY (`Editora_cnpj`)
+    REFERENCES `bibliotecasaberlivre`.`editora` (`cnpj`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`exemplar`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`exemplar` (
   `codigo` INT(11) NOT NULL,
   `localizacao` VARCHAR(50) NOT NULL,
@@ -63,61 +91,100 @@ CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`exemplar` (
   PRIMARY KEY (`codigo`),
   INDEX `fk_exemplar_livro` (`Livro_isbn` ASC),
   CONSTRAINT `fk_exemplar_livro`
-    FOREIGN KEY (`Livro_isbn`) REFERENCES `bibliotecasaberlivre`.`livro` (`isbn`))
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+    FOREIGN KEY (`Livro_isbn`)
+    REFERENCES `bibliotecasaberlivre`.`livro` (`isbn`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`genero`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`genero` (
   `nome` VARCHAR(50) NOT NULL,
   `descricao` VARCHAR(150) NULL DEFAULT NULL,
   PRIMARY KEY (`nome`))
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`item_emprestimo`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`item_emprestimo` (
   `Emprestimo_prot` INT(11) NOT NULL,
   `Exemplar_codigo` INT(11) NOT NULL,
   PRIMARY KEY (`Emprestimo_prot`, `Exemplar_codigo`),
   INDEX `fk_ie_exemplar` (`Exemplar_codigo` ASC),
   CONSTRAINT `fk_ie_emprestimo`
-    FOREIGN KEY (`Emprestimo_prot`) REFERENCES `bibliotecasaberlivre`.`emprestimo` (`protocolo`) ON DELETE CASCADE,
+    FOREIGN KEY (`Emprestimo_prot`)
+    REFERENCES `bibliotecasaberlivre`.`emprestimo` (`protocolo`)
+    ON DELETE CASCADE,
   CONSTRAINT `fk_ie_exemplar`
-    FOREIGN KEY (`Exemplar_codigo`) REFERENCES `bibliotecasaberlivre`.`exemplar` (`codigo`))
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+    FOREIGN KEY (`Exemplar_codigo`)
+    REFERENCES `bibliotecasaberlivre`.`exemplar` (`codigo`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`livro_autor`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`livro_autor` (
   `Livro_isbn` CHAR(13) NOT NULL,
   `Autor_cpf` CHAR(11) NOT NULL,
   PRIMARY KEY (`Livro_isbn`, `Autor_cpf`),
   INDEX `fk_la_autor` (`Autor_cpf` ASC),
   CONSTRAINT `fk_la_autor`
-    FOREIGN KEY (`Autor_cpf`) REFERENCES `bibliotecasaberlivre`.`autor` (`cpfAutor`) ON DELETE CASCADE,
+    FOREIGN KEY (`Autor_cpf`)
+    REFERENCES `bibliotecasaberlivre`.`autor` (`cpfAutor`)
+    ON DELETE CASCADE,
   CONSTRAINT `fk_la_livro`
-    FOREIGN KEY (`Livro_isbn`) REFERENCES `bibliotecasaberlivre`.`livro` (`isbn`) ON DELETE CASCADE)
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+    FOREIGN KEY (`Livro_isbn`)
+    REFERENCES `bibliotecasaberlivre`.`livro` (`isbn`)
+    ON DELETE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`livro_genero`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`livro_genero` (
   `Livro_isbn` CHAR(13) NOT NULL,
   `Genero_nome` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`Livro_isbn`, `Genero_nome`),
   INDEX `fk_lg_genero` (`Genero_nome` ASC),
   CONSTRAINT `fk_lg_genero`
-    FOREIGN KEY (`Genero_nome`) REFERENCES `bibliotecasaberlivre`.`genero` (`nome`) ON DELETE CASCADE,
+    FOREIGN KEY (`Genero_nome`)
+    REFERENCES `bibliotecasaberlivre`.`genero` (`nome`)
+    ON DELETE CASCADE,
   CONSTRAINT `fk_lg_livro`
-    FOREIGN KEY (`Livro_isbn`) REFERENCES `bibliotecasaberlivre`.`livro` (`isbn`) ON DELETE CASCADE)
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+    FOREIGN KEY (`Livro_isbn`)
+    REFERENCES `bibliotecasaberlivre`.`livro` (`isbn`)
+    ON DELETE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
 
+
+-- -----------------------------------------------------
+-- Table `bibliotecasaberlivre`.`telefone_usuario`
+-- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `bibliotecasaberlivre`.`telefone_usuario` (
   `Usuario_cpf` CHAR(11) NOT NULL,
   `telefone` VARCHAR(15) NOT NULL,
   PRIMARY KEY (`Usuario_cpf`, `telefone`),
   CONSTRAINT `fk_tel_usuario`
-    FOREIGN KEY (`Usuario_cpf`) REFERENCES `bibliotecasaberlivre`.`usuario` (`cpf`) ON DELETE CASCADE)
-ENGINE = InnoDB DEFAULT CHARACTER SET = utf8mb4;
+    FOREIGN KEY (`Usuario_cpf`)
+    REFERENCES `bibliotecasaberlivre`.`usuario` (`cpf`)
+    ON DELETE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
-
-
 -- ==============================================================================
 -- (b) Exemplos de ALTER TABLE (3 exemplos) e DROP TABLE
 -- Descrição: Altera colunas de tabelas existentes, cria uma tabela lixo e a apaga.
@@ -569,4 +636,3 @@ DELETE FROM livro WHERE isbn = '9788595084742';
 INSERT INTO livro (isbn, titulo, anoPublicacao, Editora_cnpj) VALUES ('9788500000000', 'Livro Teste Sem Exemplar', 2026, '11111111000101');
 DELETE FROM livro WHERE isbn = '9788500000000';
 -- Resultado: Como a contagem de exemplares é 0, a condição IF de bloqueio não é disparada e o livro é apagado com sucesso.
-
